@@ -1,6 +1,5 @@
 from ase.io import read
 import numpy as np
-import pandas as pd
 import json
 import toml
 import logging

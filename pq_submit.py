@@ -8,7 +8,7 @@ from perqueue.constants import DYNAMICWIDTHGROUP_KEY
 
 ### Paths ###
 # Setup the paths
-workflow_path = Path('..') # path to where the workflow folder and main config file is located
+workflow_path = Path('.') # path to where the workflow folder and main config file is located
 run_path = Path('.') # path to were you run perqueue from
 
 CE_model_path = str(run_path/'NaFeMnPO4_CE_model') # path to were you want the result to be stored
@@ -78,7 +78,7 @@ CE_model_dict = {
     #'select_cond': None, # selction condition. 
 
     # Generation of structures
-    'n_random_struc': 200, # The number of random structures to be relaxed
+    'n_random_struc': 20, # The number of random structures to be relaxed
     'threshold': 3, # The threshold
     'gs_threshold': 5, # The ground state threshold. When we begin sampling ground state structures
     'gs_init_temperature': 1000, # The initial temperature for the ground state sampling

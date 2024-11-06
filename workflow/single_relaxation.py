@@ -19,11 +19,6 @@ import logging
 
 from ase import Atom
 
-import pandas as pd
-import collections
-import contextlib
-import io
-import pickle
 from ase.constraints import ExpCellFilter
 from ase.optimize.bfgs import BFGS
 from ase.optimize.bfgslinesearch import BFGSLineSearch
