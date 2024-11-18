@@ -143,7 +143,13 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
         atom.set_calculator(calc)
 
         # Start the calculation for structure optimization.
-        atom.get_potential_energy()
+        # Start the calculation for structure optimization.
+        try:
+            atom.get_potential_energy()
+        except CalculationFailed:
+            logger.info(f"Calculation failed for {name}")
+            return_parameters = {'initial_start':False}
+            return True, return_parameters
         
         # Check if the relaxation have reached required accuracy
         with open(relaxsim_directory+'/OUTCAR') as file:
