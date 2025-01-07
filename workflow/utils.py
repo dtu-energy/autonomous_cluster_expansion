@@ -23,32 +23,7 @@ OPTIMIZERS = {
 }
 
 class Relaxer:
-    """Relaxer is a class for structural relaxation using machine learning potentials.
-    
-    Args:
-        calc_name (str): machine learning calculator name.
-            mace_large: MACE large model
-            mace_medium: MACE medium model
-            mace_small: MACE small model
-            mace_model: MACE personal model
-            chgnet: CHGNet model
-            painn: PaiNN personal model
-            painn_charge: PaiNN charge model
-        calc_paths (str): path to the calculator if a personal model is used else None. Defaults to None.
-        optimizer (str or ase Optimizer): the optimization algorithm. Defaults to "FIRE".
-        device (str): device to use. Defaults to "cuda".
-        relax_cell (bool): whether to relax the lattice cell. Defaults to True.
-        fmax (float): total force tolerance for relaxation convergence. Defaults to 0.1.
-        steps (int): max number of steps for relaxation. Defaults to 500.
-        traj_file (str): the trajectory file for saving. Defaults to None.
-        log_file (str): the log file for saving. Defaults to "opt.log".
-        interval (int): the step interval for saving the trajectories. Defaults to 1.
-    
-    Examples:
-        relaxer = Relaxer('mace_large', relax_cell=True, fmax=0.1, steps=1000)
-        relax_results = relaxer.relax(atoms)
-        final_structure = relax_results["final_structure"]
-    """
+    """Relaxer is a class for structural relaxation."""
     
     def __init__(
         self,
@@ -64,6 +39,19 @@ class Relaxer:
         interval: int = 1,
 
     ):
+        """
+        Args:
+            calc_name (str): calculator name. Defaults to "mace_large".
+            calc_paths (str): path to the calculator. Defaults to None.
+            optimizer (str or ase Optimizer): the optimization algorithm. Defaults to "FIRE".
+            device (str): device to use. Defaults to "cuda".
+            relax_cell (bool): whether to relax the lattice cell. Defaults to True.
+            fmax (float): total force tolerance for relaxation convergence. Defaults to 0.1.
+            steps (int): max number of steps for relaxation. Defaults to 500.
+            traj_file (str): the trajectory file for saving. Defaults to None.
+            log_file (str): the log file for saving. Defaults to "opt.log".
+            interval (int): the step interval for saving the trajectories. Defaults to 1.
+        """
         if isinstance(optimizer, str):
             optimizer_obj = OPTIMIZERS.get(optimizer, None)
         elif optimizer is None:
@@ -120,34 +108,28 @@ class Relaxer:
         Returns:
             calc (ase.calculators.calculator.Calculator): calculator object
         """
-        # MACE large model
         if self.calc_name == 'mace_large':
             from mace.calculators import mace_mp
             print('Using MACE large model')
             calc = mace_mp(model="large", dispersion=False, default_dtype="float64", device=self.device)
-        # MACE medium model
         elif self.calc_name == 'mace_medium':
             from mace.calculators import mace_mp
             print('Using MACE medium model')
             calc = mace_mp(model="medium", dispersion=False, default_dtype="float64", device=self.device)
-        # MACE small model
         elif self.calc_name == 'mace_small':
             from mace.calculators import mace_mp
             print('Using MACE small model')
             calc = mace_mp(model="small", dispersion=False, default_dtype="float64", device=self.device)
-        # MACE personal model
         elif self.calc_name == 'mace_model':
             from mace.calculators import MACECalculator
             print('Using MACE personal model')
             calc =  MACECalculator(model_paths=self.calc_paths,device=self.device, default_dtype="float64")
-        # CHGNet model
         elif self.calc_name == 'chgnet':
             from chgnet.model.dynamics import CHGNetCalculator
             from chgnet.model import CHGNet
             print('Using CHGNet model')
             model = CHGNet.load()
             calc = CHGNetCalculator(model=model,use_device=self.device)
-        # PaiNN personal model
         elif self.calc_name == 'painn':
             from PaiNN.model import PainnModel
             from PaiNN.calculator import MLCalculator, EnsembleCalculator
@@ -173,15 +155,15 @@ class Relaxer:
                 print('Using ensemble PAINN model')
                 ensemble = True
                 calc = EnsembleCalculator(models)
-        # PaiNN charge model
-        elif self.calc_name == 'painn_charge':
-            from PAINN_charge.model import PainnModel
-            from PAINN_charge.calculator import MLCalculator, EnsembleCalculator
+        
+        elif self.calc_name == 'cpainn':
+            from cPaiNN.model import PainnModel
+            from cPaiNN.calculator import MLCalculator, EnsembleCalculator
             import torch
             model_pth = Path(self.calc_paths).rglob('*best_model.pth')
+            print(self.calc_paths)
             models = []
             for each in model_pth:
-                print(each)
                 state_dict = torch.load(each, map_location=torch.device(self.device)) 
                 model = PainnModel(
                     num_interactions=state_dict["num_layer"], 
@@ -195,14 +177,15 @@ class Relaxer:
                 model.to(self.device)
                 model.load_state_dict(state_dict["model"],)    
                 models.append(model)
+
             if len(models)==1:
-                print('Using single PAINN_charge model')
+                print('Using single PAINN model')
                 ensemble = False
-                encalc = MLCalculator(models[0])
+                calc = MLCalculator(models[0])
             elif len(models)>1:
-                print('Using ensemble PAINN_charge model')
+                print('Using ensemble PAINN model')
                 ensemble = True
-                encalc = EnsembleCalculator(models)
+                calc = EnsembleCalculator(models)
         else:
             raise RuntimeError('Calculator not found!')
         return calc
