@@ -76,15 +76,13 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
     #### DFT optimization #####
     if params['method'] == 'VASP':
         cathode_obj = Cathode()
+        cathode_params = params['cathode']
         # The amount of teh moving ion in the structure
-        ion = params['ion']
+        ion = cathode_params['ion']
+        M_ions = cathode_params['M_ions']
         ion_len = np.sum(np.array(atom.get_chemical_symbols()) == ion)
-
-        # Finding all inital M_ion in the system and reduce it to a list of unique M_ion
-        M_ion_all = [a.symbol for a in atom if a.symbol != 'O'and a.symbol !='P' and a.symbol !=ion and\
-            a.symbol != 'S' and a.symbol != 'Si' and a.symbol !='B']
-        # reduce Mion_list to a list of unique M_ion
-        M_ion = list(set(M_ion_all))
+        # Finding all index transition metal ions (M_ion) in the system
+        M_ion_all = [a.index for a in atom if a.symbol in M_ions ]
 
         # Set magnetic moment
         N_Na_max = len(M_ion_all) # CHECK!!! Works if N_Na_max= N_M_ion
@@ -94,19 +92,19 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
         atom, i = cathode_obj.sort(atom, key=cathode_obj.redox_sort_func)
         count = 0
         for a in atom:
-            if isinstance(M_ion, str):
-                if a.symbol == M_ion:
+            if isinstance(M_ions, str):
+                if a.symbol == M_ions:
                     if count < N_redox:
-                        a.magmom = cathode_obj.get_magmom(M_ion,redox=True)
-                        tot_magmom += cathode_obj.get_magmom(M_ion,redox=True)
+                        a.magmom = cathode_obj.get_magmom(M_ions,redox=True)
+                        tot_magmom += cathode_obj.get_magmom(M_ions,redox=True)
                     else:
-                        a.magmom = cathode_obj.get_magmom(M_ion,redox=False)
-                        tot_magmom += cathode_obj.get_magmom(M_ion,redox=False)
+                        a.magmom = cathode_obj.get_magmom(M_ions,redox=False)
+                        tot_magmom += cathode_obj.get_magmom(M_ions,redox=False)
                     count += 1
                 else:
                     a.magmom = 0
             else:
-                if a.symbol in M_ion:
+                if a.symbol in M_ions:
                     if count < N_redox:
                         a.magmom = cathode_obj.get_magmom(a.symbol,redox=True)
                         tot_magmom += cathode_obj.get_magmom(a.symbol,redox=True)
@@ -122,7 +120,7 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
 
         logger.info(f"Total magnetic moment: {tot_magmom}")
         logger.info(f"Na concentration: {Na_conc}")
-        logger.info(f"M_ion: {M_ion}")
+        logger.info(f"M_ion: {M_ions}")
         logger.info(f"Na_len: {ion_len}")
         logger.info(f"Na_max: {N_Na_max}")
 
@@ -135,11 +133,11 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
         
         # Define U-value
         ldau_luj = {'ldau_luj':{}}
-        if type(M_ion)==str:
-            ldau_luj['ldau_luj'][M_ion] = {'L': 2, 'U': cathode_obj.get_U_value(M_ion),'J':0}
+        if type(M_ions)==str:
+            ldau_luj['ldau_luj'][M_ions] = {'L': 2, 'U': cathode_obj.get_U_value(M_ion),'J':0}
             logger.info(f'{name} has L, U, J values: (2, {cathode_obj.get_U_value(M_ion)}, 0)')
         else:
-            for m in M_ion:
+            for m in M_ions:
                 ldau_luj['ldau_luj'][m] = {'L': 2, 'U': cathode_obj.get_U_value(m),'J':0}
                 logger.info(f'{name} has L, U, J values: (2, {cathode_obj.get_U_value(m)}, 0)')
         calc.set(**ldau_luj)
