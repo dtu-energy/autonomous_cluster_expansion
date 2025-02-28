@@ -3,6 +3,7 @@ import numpy as np
 import json
 import toml
 import logging
+import pandas as pd
 from clease.montecarlo import KineticMonteCarlo
 from clease.settings import settings_from_json
 from clease.calculator import attach_calculator

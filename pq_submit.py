@@ -40,8 +40,8 @@ basis_index = [[0],[1],[2],[3,4,5]] # The index of the basis elements
 
 # Define the CE model parameters
 # The size of the cell you want to sample from. Either set the supercell_factor or the size
-supercell_factor = 7 # None
-size = None #[(1,0,0),(0,2,0),(0,0,2)]
+supercell_factor = None
+size = [(1,0,0),(0,2,0),(0,0,2)]
 if size is None and supercell_factor is None:
     raise ValueError('Either set the supercell_factor or the size')
 if size is not None and supercell_factor is not None:
@@ -78,7 +78,7 @@ CE_model_dict = {
     #'select_cond': None, # selction condition. 
 
     # Generation of structures
-    'n_random_struc': 20, # The number of random structures to be relaxed
+    'n_random_struc': 5, # The number of random structures to be relaxed
     'threshold': 3, # The threshold
     'gs_threshold': 5, # The ground state threshold. When we begin sampling ground state structures
     'gs_init_temperature': 1000, # The initial temperature for the ground state sampling
@@ -132,14 +132,14 @@ with open(cfg_path, "w") as toml_file:
 
 ##### Define parameters for workflow #####
 # Define job parameters
-CE_params = {'run_path':CE_model_path, 'db_path':CE_model_path+f'/{db_name}','cfg_path':cfg_path, 'initial_start':True, 'cif_file':cif_file}
+CE_params = {'run_path':CE_model_path, 'db_path':CE_model_path+f'/{db_name}','cfg_path':cfg_path, 'cif_file':cif_file}
 relax_params = {'run_path':CE_model_path, 'db_path':CE_model_path+f'/{db_name}', 'cfg_pth':cfg_path}
 MC_task_params = {'run_path':CE_model_path, 'cfg_pth':cfg_path}
 KMC_task_params = {'run_path':CE_model_path, 'cfg_pth':cfg_path}
 
 #### Workflow ####
 # Setup perqueue tasks
-CE_task_init = Task(workflow_path/'workflow/CE_model.py', CE_params, '1:local:10m')
+CE_task_init = Task(workflow_path/'workflow/CE_model_init.py', CE_params, '1:local:10m')
 CE_task= Task(workflow_path/'workflow/CE_model.py', CE_params , '24:xeon24el8:2d')
 
 relaxation_task = Task(workflow_path/'workflow/relaxation.py',   relax_params, '8:sm3090el8:3h')
@@ -150,7 +150,6 @@ KMC_task= Task(workflow_path/'workflow/KMC.py', KMC_task_params , '24:xeon24el8:
 # Setup groups
 dwg =  DynamicWidthGroup([relaxation_task])
 cg = CyclicalGroup([dwg, CE_task], max_tries=10)
-
 
 # Define and submit workflow
 wf = Workflow({CE_task_init: [], cg: [CE_task_init], MC_task: [cg], KMC_task: [MC_task]} )

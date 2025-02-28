@@ -75,25 +75,78 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
 
     #### DFT optimization #####
     if params['method'] == 'VASP':
+        cathode_obj = Cathode()
+        # The amount of teh moving ion in the structure
+        ion = params['ion']
+        ion_len = np.sum(np.array(atom.get_chemical_symbols()) == ion)
+
+        # Finding all inital M_ion in the system and reduce it to a list of unique M_ion
+        M_ion_all = [a.symbol for a in atom if a.symbol != 'O'and a.symbol !='P' and a.symbol !=ion and\
+            a.symbol != 'S' and a.symbol != 'Si' and a.symbol !='B']
+        # reduce Mion_list to a list of unique M_ion
+        M_ion = list(set(M_ion_all))
+
+        # Set magnetic moment
+        N_Na_max = len(M_ion_all) # CHECK!!! Works if N_Na_max= N_M_ion
+        N_redox = N_Na_max -ion_len
+        tot_magmom = 0
+        # Sort the atom:
+        atom, i = cathode_obj.sort(atom, key=cathode_obj.redox_sort_func)
+        count = 0
+        for a in atom:
+            if isinstance(M_ion, str):
+                if a.symbol == M_ion:
+                    if count < N_redox:
+                        a.magmom = cathode_obj.get_magmom(M_ion,redox=True)
+                        tot_magmom += cathode_obj.get_magmom(M_ion,redox=True)
+                    else:
+                        a.magmom = cathode_obj.get_magmom(M_ion,redox=False)
+                        tot_magmom += cathode_obj.get_magmom(M_ion,redox=False)
+                    count += 1
+                else:
+                    a.magmom = 0
+            else:
+                if a.symbol in M_ion:
+                    if count < N_redox:
+                        a.magmom = cathode_obj.get_magmom(a.symbol,redox=True)
+                        tot_magmom += cathode_obj.get_magmom(a.symbol,redox=True)
+                    else:
+                        a.magmom = cathode_obj.get_magmom(a.symbol,redox=False)
+                        tot_magmom += cathode_obj.get_magmom(a.symbol,redox=False)
+                    count += 1
+                else:
+                    a.magmom = 0
+        
+        # Define the Na concentration
+        Na_conc = ion_len /len(M_ion_all)
+
+        logger.info(f"Total magnetic moment: {tot_magmom}")
+        logger.info(f"Na concentration: {Na_conc}")
+        logger.info(f"M_ion: {M_ion}")
+        logger.info(f"Na_len: {ion_len}")
+        logger.info(f"Na_max: {N_Na_max}")
 
         # Vasp calculator
         vasp_params = params['VASP']
 
-        # Set total magmom for the structure if relevant
-        tot_magmom = 0
-        for a in atom:
-            tot_magmom += a.magmom
-        if tot_magmom != 0:
-            vasp_params['nupdown'] = tot_magmom
-            logger.info(f'{name} has nupdown {tot_magmom}')
-
-        # Set the VASP calculator
+        vasp_params['nupdown'] = tot_magmom
+        logger.info(f'{name} has nupdown {tot_magmom}')
         calc = Vasp(directory=relaxsim_directory,**vasp_params)
+        
+        # Define U-value
+        ldau_luj = {'ldau_luj':{}}
+        if type(M_ion)==str:
+            ldau_luj['ldau_luj'][M_ion] = {'L': 2, 'U': cathode_obj.get_U_value(M_ion),'J':0}
+            logger.info(f'{name} has L, U, J values: (2, {cathode_obj.get_U_value(M_ion)}, 0)')
+        else:
+            for m in M_ion:
+                ldau_luj['ldau_luj'][m] = {'L': 2, 'U': cathode_obj.get_U_value(m),'J':0}
+                logger.info(f'{name} has L, U, J values: (2, {cathode_obj.get_U_value(m)}, 0)')
+        calc.set(**ldau_luj)
 
         # Set th VASP calcualtor
         atom.set_calculator(calc)
 
-        # Start the calculation for structure optimization.
         # Start the calculation for structure optimization.
         try:
             atom.get_potential_energy()

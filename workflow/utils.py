@@ -295,3 +295,44 @@ class Cathode:
         else:
             raise ValueError(f'U value is not known for {M}')
         return U_val
+    def sort(atoms, tags=None,key=None):
+        """
+        Sort the atoms based on the tags
+        Args:
+            atoms (Atoms): The atoms to be sorted
+            tags (list): The tags to sort the atoms
+            key (function): The function to sort the tags
+        Returns:
+            Atoms: The sorted atoms
+            list: The indices of the sorted
+        """
+        if tags is None:
+            tags = atoms.get_chemical_symbols()
+        else:
+            tags = list(tags)
+        deco = sorted([(tag, i) for i, tag in enumerate(tags)],key=key)
+        indices = [i for tag, i in deco]
+        return atoms[indices], indices
+    
+    def redox_sort_func(x):
+        """
+        Sort the metal ions based on the redox state
+        Args:
+            x (str): The metal ion
+        Returns:
+            int: The redox state of the metal ion
+        """
+        if isinstance(x,tuple):
+            x = x[0]
+        if x == 'Fe':
+            return 1
+        elif x == 'Mn':
+            return 2
+        elif x == 'Co':
+            return 3
+        elif x == 'Ni':
+            return 4
+        elif x == 'Na':
+            return 5
+        else:
+            return 10
