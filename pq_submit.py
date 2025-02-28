@@ -110,7 +110,7 @@ cathode_params = {'ion':'Na','M_ions':['Fe','Mn'],'pusdo_M_ion':[]} # ion, redox
 
 # other parameters
 other_params = {'cathode': cathode_params, 'cif_file': cif_file, 
-                'method':'mace_large', # machine learning force field 
+                'method':'chgnet', # machine learning force field 
                 'calc_path':None, # path to the calculator if you want to use personal calculator
                 'optimizer':'FIRE', # Optimizer for the relaxation
                 'relax_cell': True, # if the cell should be relaxed. Only relevant for ML-FF with stress tensor prediciton
