@@ -30,7 +30,7 @@ from ase import Atoms, units
 from ase.io import Trajectory
 from ase.optimize.optimize import Optimizer
 
-from utils import Relaxer, Cathode
+from workflow.utils import Relaxer, Cathode
 
 def main(run_path,db_path,run_list,cfg_pth,**kwargs):
     
@@ -121,7 +121,10 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
     else:
         # Set parameters 
         calc_name = params['method']
-        calc_path = params['calc_path']
+        if 'calc_path' in params.keys():
+            calc_path = params['calc_path']
+        else:
+            calc_path = None
         optimizer = params['optimizer']
         relax_cell = params['relax_cell']
         traj_path = relaxsim_directory+'/opt.traj'
