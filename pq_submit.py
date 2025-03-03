@@ -140,12 +140,12 @@ KMC_task_params = {'run_path':CE_model_path, 'cfg_pth':cfg_path}
 #### Workflow ####
 # Setup perqueue tasks
 CE_task_init = Task(workflow_path/'workflow/CE_model_init.py', CE_params, '1:local:10m')
-CE_task= Task(workflow_path/'workflow/CE_model.py', CE_params , '24:xeon24el8:2d')
+CE_task= Task(workflow_path/'workflow/CE_model.py', CE_params , '24:1:xeon24el8:2d')
 
 relaxation_task = Task(workflow_path/'workflow/relaxation.py',   relax_params, '8:sm3090el8:3h')
 
-MC_task= Task(workflow_path/'workflow/MC.py', MC_task_params , '24:xeon24el8:2d')
-KMC_task= Task(workflow_path/'workflow/KMC.py', KMC_task_params , '24:xeon24el8:2d')
+MC_task= Task(workflow_path/'workflow/MC.py', MC_task_params , '24:1:xeon24el8:2d')
+KMC_task= Task(workflow_path/'workflow/KMC.py', KMC_task_params , '24:1:xeon24el8:2d')
 
 # Setup groups
 dwg =  DynamicWidthGroup([relaxation_task])
