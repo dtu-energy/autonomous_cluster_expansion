@@ -140,16 +140,16 @@ KMC_task_params = {'run_path':CE_model_path, 'cfg_pth':cfg_path}
 #### Workflow ####
 # Setup perqueue tasks
 CE_task_init = Task(workflow_path/'workflow/CE_model_init.py', CE_params, '1:local:10m')
-CE_task= Task(workflow_path/'workflow/CE_model.py', CE_params , '24:1:xeon24el8_test:30m')
+CE_task= Task(workflow_path/'workflow/CE_model.py', CE_params , '24:xeon24el8_test:10m')
 
-relaxation_task = Task(workflow_path/'workflow/relaxation.py',   relax_params, '8:1:sm3090_devel:3h')
+relaxation_task = Task(workflow_path/'workflow/relaxation.py',   relax_params, '8:sm3090_devel:3h')
 
-MC_task= Task(workflow_path/'workflow/MC.py', MC_task_params , '24:1:xeon24el8_test:30m')
-KMC_task= Task(workflow_path/'workflow/KMC.py', KMC_task_params , '24:1:xeon24el8_test:30m')
+MC_task= Task(workflow_path/'workflow/MC.py', MC_task_params , '24:xeon24el8_test:10m')
+KMC_task= Task(workflow_path/'workflow/KMC.py', KMC_task_params , '24:xeon24el8_test:10m')
 
 # Setup groups
 dwg =  DynamicWidthGroup([relaxation_task])
-cg = CyclicalGroup([dwg, CE_task], max_tries=1) #### SET maximum number of iterations ####
+cg = CyclicalGroup([dwg, CE_task], max_tries=2) #### SET maximum number of iterations ####
 
 # Define and submit workflow
 wf = Workflow({CE_task_init: [], cg: [CE_task_init], MC_task: [cg], KMC_task: [MC_task]} )

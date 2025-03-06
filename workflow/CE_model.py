@@ -28,7 +28,7 @@ from ase import Atoms
 import toml
 from perqueue.constants import DYNAMICWIDTHGROUP_KEY,CYCLICALGROUP_KEY, ITER_KW
 
-def main(run_path, db_path, initial_start, cif_file ,cfg_path, random_seed=27,**kwargs):
+def main(run_path, db_path ,cfg_path, random_seed=27,**kwargs):
 
     # Load the CE model parameters
     with open(cfg_path, 'r') as f:
@@ -84,16 +84,22 @@ def main(run_path, db_path, initial_start, cif_file ,cfg_path, random_seed=27,**
     
     # set the alpha value with the one found above, and fit data using it.
     logger.info('Fitting the CE model')
-    evl.set_fitting_scheme(fitting_scheme=fiting_scheme, alpha=alpha)
-    evl.fit()  # Run the fit with these settings.
-    logger.info('Fitting done')
-    evl.plot_fit(interactive=False, savefig=True, fname=run_path+f'/fit_new_iter{iter_idx}.png')
+    try:
+        evl.plot_fit(interactive=False, savefig=True, fname=run_path+f'/fit_new_iter{iter_idx}.png')
+    except:
+        logger.info('Failed to plot fit')
     # Plot fit
-    fig = pp.plot_fit(evl)#, interactive=True)
-    fig.savefig(run_path+f'/fit_iter{iter_idx}.png')
+    try:
+        fig = pp.plot_fit(evl)#, interactive=True)
+        fig.savefig(run_path+f'/fit_iter{iter_idx}.png')
+    except:
+        logger.info('Failed to plot fit')
     # plot ECI values
-    fig = pp.plot_eci(evl)
-    fig.savefig(run_path+f'/eci_iter{iter_idx}.png')
+    try:
+        fig = pp.plot_eci(evl)
+        fig.savefig(run_path+f'/eci_iter{iter_idx}.png')
+    except:
+        logger.info('Failed to plot ECI values')
 
     # save a dictionary containing cluster names and their ECIs
     evl.save_eci(fname=run_path+f'/eci_iter{iter_idx}.json')

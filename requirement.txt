@@ -1,6 +1,6 @@
-ase==3.23.0
-perqueue=0.2.2
-myqueue==22.7.1
+#perqueue=0.2.2
+myqueue==24.1.0
+ase
 clease==1.0.6
 tqdm
 matplotlib
