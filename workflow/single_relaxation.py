@@ -1,6 +1,4 @@
 import os
-print(os.environ['CONDA_DEFAULT_ENV'])
-
 from ase.calculators.vasp import Vasp
 from ase.io import read, write, Trajectory
 from ase.db import connect
