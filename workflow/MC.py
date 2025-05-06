@@ -4,10 +4,9 @@ import json
 import toml
 import logging
 import pandas as pd
-from clease.montecarlo import KineticMonteCarlo
 from clease.settings import settings_from_json
 from clease.calculator import attach_calculator
-from clease.montecarlo.observers import Snapshot, SiteOrderParameter, ConcentrationObserver, LowestEnergyStructure
+from clease.montecarlo.observers import Snapshot, ConcentrationObserver
 from clease.montecarlo import Montecarlo, RandomSwap
 
 from ase.io.trajectory import TrajectoryWriter
@@ -128,6 +127,7 @@ def main(run_path,cfg_path,CE_setting_path,ECI_path,**kwargs):
     logger.debug(f'Loading the CE model from {CE_setting_path} and the ECI from {ECI_path}')
     print(f'Using the following parameters: system_temp:{system_temp}, anelling_temps:{anelling_temps}, ')
     print(f'diffusion_elem:{diffusion_elem}, vaccancy_elem:{vaccancy_elem}, sweeps:{sweeps}, conc:{conc}')
+    
     ### Initiate atoms object ###
     # Load atom from CE settings
     atoms_i=settings.atoms

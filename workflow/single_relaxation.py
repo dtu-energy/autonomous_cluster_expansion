@@ -1,33 +1,14 @@
 import os
-from ase.calculators.vasp import Vasp
-from ase.io import read, write, Trajectory
+
 from ase.db import connect
-from shutil import copy
-import os, subprocess, sys 
+import os
 from clease.tools import update_db
 import numpy as np
 import argparse
-import json
 import toml
-from pathlib import Path
-from ase.calculators.calculator import Calculator
 from ase.calculators.calculator import CalculationFailed
 from perqueue.constants import INDEX_KW
 import logging
-
-from ase import Atom
-
-from ase.constraints import ExpCellFilter
-from ase.optimize.bfgs import BFGS
-from ase.optimize.bfgslinesearch import BFGSLineSearch
-from ase.optimize.fire import FIRE
-from ase.optimize.lbfgs import LBFGS, LBFGSLineSearch
-from ase.optimize.mdmin import MDMin
-from ase.optimize.sciopt import SciPyFminBFGS, SciPyFminCG
-from ase import Atoms, units
-
-from ase.io import Trajectory
-from ase.optimize.optimize import Optimizer
 
 from utils import Relaxer, Cathode
 

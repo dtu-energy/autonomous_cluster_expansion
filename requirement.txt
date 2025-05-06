@@ -1,8 +1,10 @@
-#perqueue=0.2.2
 myqueue==24.1.0
 ase
-clease==1.0.6
+clease==1.1.0
 tqdm
+toml
 matplotlib
 numpy
 pandas
+chgnet==0.4.0
+mace-torch==0.3.13

@@ -1,35 +1,19 @@
-
-from clease.tools import reconfigure
-from clease import  NewStructures,Evaluate
-from clease.settings import Concentration, CECrystal, CEBulk
-from clease.tools import reconfigure
-from clease.regression import PhysicalRidge,LinearRegression
-from clease.basis_function import BinaryLinear
-from clease.regression.physical_ridge import random_cv_hyper_opt
-from clease.settings import settings_from_json
+from clease import  NewStructures
+from clease.settings import Concentration, CECrystal
 import os
 import logging
 logging.basicConfig(level=logging.INFO)
-from clease.corr_func import CorrFunction
-import clease.plot_post_process as pp
-
-import json# from tqdm import tqdm
-import itertools
-from ase.visualize import view
-import shutil
 from ase.io import read
 import numpy as np
 from ase.db import connect
-import matplotlib.pyplot as plt
-from spglib import get_spacegroup, find_primitive, standardize_cell
+from spglib import get_spacegroup, standardize_cell
 from ase.io import read
-from ase.visualize import view
 from ase import Atoms
 
 import toml
 from perqueue.constants import DYNAMICWIDTHGROUP_KEY,CYCLICALGROUP_KEY, ITER_KW
 
-def main(run_path, db_path, cif_file ,cfg_path, random_seed=27,**kwargs):
+def main(run_path, db_path ,cfg_path, random_seed=27,**kwargs):
 
     # Load the CE model parameters
     with open(cfg_path, 'r') as f:
@@ -46,9 +30,11 @@ def main(run_path, db_path, cif_file ,cfg_path, random_seed=27,**kwargs):
     logger.addHandler(runHandler)
     logger.info(f'CE parameters: {CE_model_dict}')
     
-    # Load cif file 
-    atom_cif = read(cif_file)
+    # Load cif file
     if CE_model_dict['auto_set_cell']:
+
+        atom_cif = read(CE_model_dict['cif_file'])
+        logger.info(f'Atom: {atom_cif.get_chemical_formula()}, Space group: {space_group}, Cell parameters: {cellpar}')
         cif_cell = (atom_cif.cell, atom_cif.get_scaled_positions(), atom_cif.numbers)
         # Define space group
         space_group_str = get_spacegroup(cif_cell,
@@ -86,14 +72,14 @@ def main(run_path, db_path, cif_file ,cfg_path, random_seed=27,**kwargs):
         basis_index_list = [ basis_index[group] for group in basis_index.keys()]
     else:
         # Define cellpar and space group
-        cellpar = atom_cif.cell.cellpar()
+        cellpar = CE_model_dict['cell_par']
         space_group = CE_model_dict['space_group']
         basis_element = CE_model_dict['basis_element']
         basis_index_list = CE_model_dict['basis_index']
         basis_coord = CE_model_dict['basis_coord']
 
 
-    logger.info(f'Atom: {atom_cif.get_chemical_formula()}, Space group: {space_group}, Cell parameters: {cellpar}')
+    
     logger.info(f'Basis element: {basis_element}')
     logger.info(f'Basis index:{basis_index_list}')
     logger.info(f'Basis coord: {basis_coord}')

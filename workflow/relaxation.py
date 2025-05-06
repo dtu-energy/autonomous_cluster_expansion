@@ -1,34 +1,13 @@
 import os
 from ase.calculators.vasp import Vasp
-from ase.io import read, write, Trajectory
 from ase.db import connect
-from shutil import copy
-import os, subprocess, sys 
+import os, sys 
 from clease.tools import update_db
 import numpy as np
-import argparse
-import json
 import toml
-from ase.calculators.calculator import Calculator
 from ase.calculators.calculator import CalculationFailed
 from perqueue.constants import INDEX_KW
 import logging
-
-from ase import Atom
-
-from ase.constraints import ExpCellFilter
-from ase.optimize.bfgs import BFGS
-from ase.optimize.bfgslinesearch import BFGSLineSearch
-from ase.optimize.fire import FIRE
-from ase.optimize.lbfgs import LBFGS, LBFGSLineSearch
-from ase.optimize.mdmin import MDMin
-from ase.optimize.sciopt import SciPyFminBFGS, SciPyFminCG
-from ase import Atoms, units
-
-from ase.io import Trajectory
-from ase.optimize.optimize import Optimizer
-
-from workflow.utils import Relaxer, Cathode
 
 def main(run_path,db_path,run_list,cfg_pth,**kwargs):
     
@@ -77,21 +56,12 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
         # Vasp calculator
         vasp_params = params['VASP']
 
-        # Set total magmom for the structure if relevant
-        tot_magmom = 0
-        for a in atom:
-            tot_magmom += a.magmom
-        if tot_magmom != 0:
-            vasp_params['nupdown'] = tot_magmom
-            logger.info(f'{name} has nupdown {tot_magmom}')
-
         # Set the VASP calculator
         calc = Vasp(directory=relaxsim_directory,**vasp_params)
 
         # Set th VASP calcualtor
         atom.set_calculator(calc)
 
-        # Start the calculation for structure optimization.
         # Start the calculation for structure optimization.
         try:
             atom.get_potential_energy()
@@ -117,6 +87,9 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
 
     #### ML optimization ####
     else:
+        # append the workflow path and load the ML relaxer class
+        sys.path.append(params['workflow_path'])
+        from workflow.utils import ML_Relaxer
         # Set parameters 
         calc_name = params['method']
         if 'calc_path' in params.keys():
@@ -130,11 +103,10 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
         fmax = np.abs(params['VASP']['ediffg'])
         max_step = params['max_step']
         # get calculator and set it to atoms object 
-        relaxer = Relaxer(calc_name=calc_name,calc_paths=calc_path,
-                          optimizer=optimizer,relax_cell=relax_cell,device='cuda',
-                          fmax=fmax,steps=max_step,traj_file=traj_path,log_file=log_path,interval=1)
-
-        relax_results=relaxer.relax(atom)
+        relaxer = ML_Relaxer(calc_name=calc_name,calc_paths=calc_path,
+                          optimizer=optimizer,relax_cell=relax_cell,device='cuda')
+        relax_results=relaxer.relax(atom, fmax=fmax, steps=max_step,
+                                    traj_file=traj_path, log_file=log_path, interval=1)
         final_structure = relax_results["final_structure"]
         final_energy = final_structure.get_potential_energy() #relax_results["trajectory"].energies[-1]
         force = np.sqrt(np.sum(((final_structure.get_forces())**2),axis=1))
@@ -144,12 +116,11 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
         logger.info(f"The final energy is {float(final_energy):.3f} eV.")
         logger.info(f"The maximum force is {fmax_relax:.3f} eV/Å.")
 
-        # Check if the relaxation have reaxhed required accuracy
-        #traj = Trajectory(traj_path)
-        if fmax_relax > fmax:
+        # Check if the relaxation have reaxhed required accuracy within 20% of the fmax
+        if fmax_relax > fmax+fmax*0.2:
             var = False
             logger.info(f'Relaxation did not converge. Fmax: {fmax_relax}' )
-            return_parameters = {}
+            return_parameters = {'initial_start':False}
             return True, return_parameters
 
     # Update database 

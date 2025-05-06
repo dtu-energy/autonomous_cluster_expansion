@@ -1,24 +1,17 @@
 from ase.io import read
-import numpy as np
 import json
 import toml
 import logging
 from clease.settings import settings_from_json
 from clease.calculator import attach_calculator
-from clease.montecarlo.observers import Snapshot, SiteOrderParameter, ConcentrationObserver, LowestEnergyStructure
-from clease.montecarlo import Montecarlo, RandomSwap
-
-from ase.io.trajectory import TrajectoryWriter
-from clease.montecarlo.observers import MCObserver
-from ase.calculators.singlepoint import SinglePointCalculator
-
+from clease.montecarlo.observers import Snapshot, ConcentrationObserver
 
 from clease.montecarlo.kmc_events import KMCEventType
 from clease.montecarlo import KineticMonteCarlo
 from clease.montecarlo.barrier_models import BEPBarrier
 
 from ase.neighborlist import neighbor_list
-from typing import List, Tuple, Sequence, Union
+from typing import List
 from ase import Atoms
 class NeighbourSwap(KMCEventType):
     """

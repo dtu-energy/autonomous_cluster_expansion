@@ -9,10 +9,21 @@ To intall required packages:
 pip install -r requirement.txt
 ```
 
-Afterwards PerQueue needs to be initialized:
+PerQueue is not pip initilized at the moment, but is installed using:
+```bash
+pip install git+https://gitlab.com/asm-dtu/perqueue.git
+```
+
+Before utalizing the workflow, one need to initialize PerQueue and MyQueue in the directory, where the workflow should run. This is done by the below commands for MyQueue:
+```bash
+mq init
+```
+and the below command for PerQueue:
 ```bash
 pq init
 ```
+The code is set at the moment to use local computer resources but different HPC cluster settings can be added. A set of HPC configuration files are presented in (https://github.com/dtu-energy/Myqueue-for-HPC).
+
 
 The 'pq_submit.py' file is used to initialize the workflow. All parameters need to train the cluster expansion model needs to be edited in here before starting the workflow. As an example the 'pq_submit.py' is set to train a cluster expansion model for NaFeMnPO4, where Na can be replaced with a vacant site (X) and Fe/Mn can swap site. The example cluster expansion model can be used to model disorder in NaFeMnPO4.
 
