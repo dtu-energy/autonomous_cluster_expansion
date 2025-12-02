@@ -107,9 +107,9 @@ def main(run_path, db_path ,cfg_path, random_seed=27,**kwargs):
     setting.basis_func_type=CE_model_dict['basis_func_type']
 
     # Set the size of the cell to sample from
-    if CE_model_dict['size'] is not None:
+    try: 
         setting.size=CE_model_dict['size']
-    else:
+    except:
         setting.supercell_factor = CE_model_dict['supercell_factor']
     
     # Create the initial randomstructures
