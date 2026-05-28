@@ -118,7 +118,11 @@ def main(run_path, db_path ,cfg_path, random_seed=27,**kwargs):
     n_random_struc = CE_model_dict['n_random_struc']
     logger.info(f'Initial start, creating {n_random_struc} random structures')
     ns = NewStructures(setting, struct_per_gen=n_random_struc, generation_number=0)
-    ns.generate_random_structures()
+    try:
+        ns.generate_initial_pool()
+    except Exception as e:
+        logger.error(f'Error in generating initial structures: {e}')
+        ns.generate_random_structures()
     
     # Save initial settings
     setting.save(run_path+'/initial_setting.json')

@@ -168,8 +168,9 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
         N_redox = N_Na_max -ion_len
         tot_magmom = 0
         # Sort the atom:
-        atom, i = sort(atom, key=redox_sort_func)
+        #atom, i = sort(atom, key=redox_sort_func)
         count_redox = 0
+        print(atom)
         for a in atom:
             # Ga represents oxidized Fe3+
             if a.symbol == 'Ga':
@@ -177,12 +178,15 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
                 a.symbol = 'Fe'
                 a.magmom = magmom
                 tot_magmom += magmom
+                count_redox += 1
 
-            if a.symbol == 'Fe':
+            elif a.symbol == 'Fe':
                 magmom = get_magmom('Fe',redox=False)
                 a.symbol = 'Fe'
                 a.magmom = magmom
                 tot_magmom += magmom
+            else:
+                a.magmom = 0
         logger.info(f"Number of redox Fe3+: {count_redox}")
         logger.info(f"Number of Fe2+: {len(M_ion_all)-count_redox}")
         # Define the Na concentration
@@ -251,7 +255,7 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
     else:
         # append the workflow path and load the ML relaxer class
         sys.path.append(params['workflow_path'])
-        from workflow.utils import ML_Relaxer
+        from cPaiNN.relax import ML_Relaxer
         # Set parameters 
         calc_name = params['method']
         if 'calc_path' in params.keys():
@@ -264,11 +268,12 @@ def main(run_path,db_path,run_list,cfg_pth,**kwargs):
         log_path = relaxsim_directory+'/opt.log'
         fmax = np.abs(params['VASP']['ediffg'])
         max_step = params['max_step']
+        cell_relaxer = True
         # get calculator and set it to atoms object 
+        device_global = 'cuda' if os.getenv('CUDA_VISIBLE_DEVICES') is not None else 'cpu'
         relaxer = ML_Relaxer(calc_name=calc_name,calc_paths=calc_path,
-                          optimizer=optimizer,relax_cell=relax_cell,device='cuda')
-        relax_results=relaxer.relax(atom, fmax=fmax, steps=max_step,
-                                    traj_file=traj_path, log_file=log_path, interval=1)
+                            device=device_global,optimizer=optimizer)#
+        relax_results=relaxer.relax(atom, fmax=fmax, steps=max_step,traj_file=traj_path, log_file=log_path, interval=1)
         final_structure = relax_results["final_structure"]
         final_energy = final_structure.get_potential_energy() #relax_results["trajectory"].energies[-1]
         force = np.sqrt(np.sum(((final_structure.get_forces())**2),axis=1))
